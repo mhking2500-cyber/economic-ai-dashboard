@@ -1,0 +1,107 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Asset {
+  id        String       @id @default(cuid())
+  symbol    String       @unique
+  name      String
+  type      AssetType
+  market    String
+  isActive  Boolean      @default(true)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+  prices    PricePoint[]
+  links     NewsAssetLink[]
+}
+
+model PricePoint {
+  id        String   @id @default(cuid())
+  assetId   String
+  ts        DateTime
+  open      Decimal  @db.Decimal(18, 6)
+  high      Decimal  @db.Decimal(18, 6)
+  low       Decimal  @db.Decimal(18, 6)
+  close     Decimal  @db.Decimal(18, 6)
+  volume    Decimal? @db.Decimal(22, 6)
+  createdAt DateTime @default(now())
+  asset     Asset    @relation(fields: [assetId], references: [id], onDelete: Cascade)
+
+  @@index([assetId, ts(sort: Desc)])
+  @@unique([assetId, ts])
+}
+
+model FxRate {
+  id        String   @id @default(cuid())
+  pair      String
+  rate      Decimal  @db.Decimal(18, 6)
+  ts        DateTime
+  createdAt DateTime @default(now())
+
+  @@index([pair, ts(sort: Desc)])
+}
+
+model NewsArticle {
+  id          String         @id @default(cuid())
+  title       String
+  url         String         @unique
+  source      String
+  publishedAt DateTime
+  language    String
+  contentHash String         @unique
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  aiImpact    NewsAiImpact?
+  links       NewsAssetLink[]
+
+  @@index([publishedAt(sort: Desc)])
+}
+
+model NewsAiImpact {
+  id             String       @id @default(cuid())
+  newsId         String       @unique
+  impactScore    Int
+  sentiment      Sentiment
+  summary        String
+  horizon        Horizon
+  confidence     Decimal      @db.Decimal(4, 3)
+  modelVersion   String
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  article        NewsArticle  @relation(fields: [newsId], references: [id], onDelete: Cascade)
+}
+
+model NewsAssetLink {
+  id             String      @id @default(cuid())
+  newsId         String
+  assetId        String
+  relevanceScore Decimal     @db.Decimal(4, 3)
+  article        NewsArticle @relation(fields: [newsId], references: [id], onDelete: Cascade)
+  asset          Asset       @relation(fields: [assetId], references: [id], onDelete: Cascade)
+
+  @@unique([newsId, assetId])
+  @@index([assetId, relevanceScore(sort: Desc)])
+}
+
+enum AssetType {
+  STOCK
+  CRYPTO
+  FX
+}
+
+enum Sentiment {
+  POSITIVE
+  NEUTRAL
+  NEGATIVE
+}
+
+enum Horizon {
+  SHORT_TERM
+  MID_TERM
+  LONG_TERM
+}
