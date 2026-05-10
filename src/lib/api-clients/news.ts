@@ -8,19 +8,24 @@ const NEWS_PROVIDER = (process.env.NEWS_PROVIDER ?? "GENERIC").toUpperCase();
 export async function fetchMacroNews(limit = 30): Promise<NewsItem[]> {
   let source: NewsItem[] = [];
 
+  try {
   if (!NEWS_API_BASE) {
     source = await fetchRssFallback(limit);
   } else if (NEWS_PROVIDER === "GNEWS") {
     if (!NEWS_API_KEY) {
       source = await fetchRssFallback(limit);
     } else {
-      const url =
-        `${NEWS_API_BASE}/search?q=economy%20OR%20geopolitics%20OR%20inflation` +
-        `&lang=en&max=${Math.min(limit, 50)}&apikey=${NEWS_API_KEY}`;
-      const response = await fetch(url, { next: { revalidate: 60 } });
-      if (response.ok) {
-        const json = (await response.json()) as unknown;
-        source = parseGNews(json);
+      try {
+        const url =
+          `${NEWS_API_BASE}/search?q=economy%20OR%20geopolitics%20OR%20inflation` +
+          `&lang=en&max=${Math.min(limit, 50)}&apikey=${NEWS_API_KEY}`;
+        const response = await fetch(url, { next: { revalidate: 60 } });
+        if (response.ok) {
+          const json = (await response.json()) as unknown;
+          source = parseGNews(json);
+        }
+      } catch {
+        source = [];
       }
       if (!source.length) {
         source = await fetchRssFallback(limit);
@@ -30,14 +35,18 @@ export async function fetchMacroNews(limit = 30): Promise<NewsItem[]> {
     if (!NEWS_API_KEY) {
       source = await fetchRssFallback(limit);
     } else {
-      const url = `${NEWS_API_BASE}/news?limit=${limit}&topics=macro,economy,geopolitics`;
-      const response = await fetch(url, {
-        headers: { Authorization: `Bearer ${NEWS_API_KEY}` },
-        next: { revalidate: 60 }
-      });
-      if (response.ok) {
-        const json = (await response.json()) as unknown;
-        source = parseGenericNews(json);
+      try {
+        const url = `${NEWS_API_BASE}/news?limit=${limit}&topics=macro,economy,geopolitics`;
+        const response = await fetch(url, {
+          headers: { Authorization: `Bearer ${NEWS_API_KEY}` },
+          next: { revalidate: 60 }
+        });
+        if (response.ok) {
+          const json = (await response.json()) as unknown;
+          source = parseGenericNews(json);
+        }
+      } catch {
+        source = [];
       }
       if (!source.length) {
         source = await fetchRssFallback(limit);
@@ -46,7 +55,10 @@ export async function fetchMacroNews(limit = 30): Promise<NewsItem[]> {
   }
 
   const dedup = dedupeNews(source);
-  return localizeNewsToKorean(dedup.slice(0, limit));
+  return await localizeNewsToKorean(dedup.slice(0, limit));
+  } catch {
+    return [];
+  }
 }
 
 async function fetchRssFallback(limit: number): Promise<NewsItem[]> {

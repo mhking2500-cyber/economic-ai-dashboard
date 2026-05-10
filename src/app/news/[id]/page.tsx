@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -38,7 +39,7 @@ export default async function NewsDetailPage({ params }: Props) {
       />
       <main className="mx-auto max-w-3xl p-6">
         <nav className="text-muted mb-4 text-xs">
-          <a href="/" className="hover:underline">홈</a>
+          <Link href="/" className="hover:underline">홈</Link>
           <span className="mx-1">/</span>
           <span>뉴스</span>
           <span className="mx-1">/</span>
@@ -47,7 +48,7 @@ export default async function NewsDetailPage({ params }: Props) {
         <h1 className="text-xl font-bold">뉴스 상세 분석</h1>
         <p className="text-muted mt-2 text-sm">
           뉴스 원문과 AI 투자 영향도 분석은{" "}
-          <a href="/" className="text-blue-400 hover:underline">대시보드 홈</a>
+          <Link href="/" className="text-blue-400 hover:underline">대시보드 홈</Link>
           의 뉴스 피드에서 확인하세요.
         </p>
       </main>

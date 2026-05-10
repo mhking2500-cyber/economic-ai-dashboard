@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 
 type Props = { params: Promise<{ symbol: string }> };
 
@@ -47,7 +48,7 @@ export default async function StockDetailPage({ params }: Props) {
       />
       <main className="mx-auto max-w-5xl p-6">
         <nav className="text-muted mb-4 text-xs">
-          <a href="/" className="hover:underline">홈</a>
+          <Link href="/" className="hover:underline">홈</Link>
           <span className="mx-1">/</span>
           <span>주식</span>
           <span className="mx-1">/</span>
@@ -57,7 +58,7 @@ export default async function StockDetailPage({ params }: Props) {
         <p className="text-muted mt-1 text-sm">티커: {upper}</p>
         <p className="text-muted mt-4 text-sm">
           실시간 시세, 차트, AI 투자 영향도 분석은{" "}
-          <a href="/" className="text-blue-400 hover:underline">대시보드 홈</a>
+          <Link href="/" className="text-blue-400 hover:underline">대시보드 홈</Link>
           에서 확인하세요.
         </p>
       </main>
